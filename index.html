@@ -1,90 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<meta name="theme-color" content="#f5f5f7">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Tic Tac Toe">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon.svg">
-<link rel="stylesheet" href="style.css">
-<title>Tic Tac Toe</title>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+
+  <meta name="theme-color" content="#f5f5f7">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Tic Tac Toe">
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+
+  <title>Tic Tac Toe</title>
 </head>
+
 <body>
+
 <main class="app">
+
   <header class="topbar">
     <div>
       <div class="eyebrow">TIC TAC TOE</div>
-      <h1>Classic. Refined.</h1>
+      <h1>5 × 5</h1>
     </div>
-    <button id="themeBtn" class="icon-btn" aria-label="Toggle appearance">☼</button>
+
+    <button id="themeBtn"
+            class="icon-btn"
+            aria-label="Toggle appearance">
+      ☼
+    </button>
   </header>
 
+
   <section class="score-card">
-    <div><span>You</span><strong id="userScore">0</strong></div>
+
+    <div>
+      <span>You</span>
+      <strong id="userScore">0</strong>
+    </div>
+
     <div class="divider"></div>
-    <div><span>Draws</span><strong id="drawScore">0</strong></div>
+
+    <div>
+      <span>Draws</span>
+      <strong id="drawScore">0</strong>
+    </div>
+
     <div class="divider"></div>
-    <div><span>Computer</span><strong id="cpuScore">0</strong></div>
+
+    <div>
+      <span>Computer</span>
+      <strong id="cpuScore">0</strong>
+    </div>
+
   </section>
+
 
   <section class="status">
     <div id="statusDot" class="status-dot"></div>
-    <span id="statusText">Choose a difficulty to begin</span>
+    <span id="statusText">Your turn</span>
   </section>
 
-  <section id="board" class="board" aria-label="Tic Tac Toe board">
-    <button class="cell" data-index="0" aria-label="Cell 1"></button>
-    <button class="cell" data-index="1" aria-label="Cell 2"></button>
-    <button class="cell" data-index="2" aria-label="Cell 3"></button>
-    <button class="cell" data-index="3" aria-label="Cell 4"></button>
-    <button class="cell" data-index="4" aria-label="Cell 5"></button>
-    <button class="cell" data-index="5" aria-label="Cell 6"></button>
-    <button class="cell" data-index="6" aria-label="Cell 7"></button>
-    <button class="cell" data-index="7" aria-label="Cell 8"></button>
-    <button class="cell" data-index="8" aria-label="Cell 9"></button>
+
+  <section id="board"
+           class="board"
+           aria-label="5 by 5 Tic Tac Toe board">
+
+    <button class="cell" data-index="0"></button>
+    <button class="cell" data-index="1"></button>
+    <button class="cell" data-index="2"></button>
+    <button class="cell" data-index="3"></button>
+    <button class="cell" data-index="4"></button>
+
+    <button class="cell" data-index="5"></button>
+    <button class="cell" data-index="6"></button>
+    <button class="cell" data-index="7"></button>
+    <button class="cell" data-index="8"></button>
+    <button class="cell" data-index="9"></button>
+
+    <button class="cell" data-index="10"></button>
+    <button class="cell" data-index="11"></button>
+    <button class="cell" data-index="12"></button>
+    <button class="cell" data-index="13"></button>
+    <button class="cell" data-index="14"></button>
+
+    <button class="cell" data-index="15"></button>
+    <button class="cell" data-index="16"></button>
+    <button class="cell" data-index="17"></button>
+    <button class="cell" data-index="18"></button>
+    <button class="cell" data-index="19"></button>
+
+    <button class="cell" data-index="20"></button>
+    <button class="cell" data-index="21"></button>
+    <button class="cell" data-index="22"></button>
+    <button class="cell" data-index="23"></button>
+    <button class="cell" data-index="24"></button>
+
     <div id="winLine" class="win-line"></div>
+
   </section>
 
-  <button id="newGameBtn" class="primary-btn">New Game</button>
-  <button id="resetScoreBtn" class="secondary-btn">Reset Score</button>
 
-  <p class="footer">You play as <b>×</b> · Computer plays <b>○</b></p>
+  <button id="newGameBtn" class="primary-btn">
+    New Game
+  </button>
+
+  <button id="resetScoreBtn" class="secondary-btn">
+    Reset Score
+  </button>
+
+
+  <p class="footer">
+    You play as <b>×</b> · Computer plays <b>○</b>
+  </p>
+
 </main>
 
-<div id="difficultyModal" class="modal hidden">
-  <div class="backdrop"></div>
-  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="difficultyTitle">
-    <div class="grabber"></div>
-    <h2 id="difficultyTitle">Choose your challenge</h2>
-    <p>How tough should the computer be?</p>
-    <div class="difficulty-list">
-      <button class="difficulty easy" data-difficulty="easy">
-        <span class="level-icon">●</span><span><b>Easy</b><small>Relaxed & casual</small></span><span>›</span>
-      </button>
-      <button class="difficulty medium" data-difficulty="medium">
-        <span class="level-icon">●</span><span><b>Medium</b><small>A real challenge</small></span><span>›</span>
-      </button>
-      <button class="difficulty hard" data-difficulty="hard">
-        <span class="level-icon">●</span><span><b>Hard</b><small>Near-perfect play</small></span><span>›</span>
-      </button>
-    </div>
-    <button id="cancelBtn" class="cancel-btn">Cancel</button>
-  </section>
-</div>
+
+<!-- GAME RESULT -->
 
 <div id="resultModal" class="modal hidden">
+
   <div class="backdrop"></div>
+
   <section class="result-card">
+
     <div id="resultIcon" class="result-icon">×</div>
-    <div id="resultTitle" class="result-title">You Win!</div>
-    <p id="resultSubtitle">Brilliant move.</p>
-    <button id="playAgainBtn" class="primary-btn">Play Again</button>
+
+    <div id="resultTitle" class="result-title">
+      You Win!
+    </div>
+
+    <p id="resultSubtitle">
+      Brilliant move.
+    </p>
+
+    <button id="playAgainBtn" class="primary-btn">
+      Play Again
+    </button>
+
   </section>
+
 </div>
 
-<script src="script.js"></script><script>if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js"));</script>
+
+<script src="script.js"></script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js");
+  });
+}
+</script>
+
 </body>
 </html>

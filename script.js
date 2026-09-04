@@ -30,17 +30,15 @@ const drawScoreEl =
   document.getElementById("drawScore");
 
 
-let board =
-  Array(25).fill("");
+let board = Array(25).fill("");
 
 let gameOver = false;
-
 let thinking = false;
 
 
-/*
-  Scores persist between games.
-*/
+/* ================================
+   SCORE
+================================ */
 
 let scores =
   JSON.parse(
@@ -51,22 +49,6 @@ let scores =
     draw: 0
   };
 
-
-/*
-  Restore appearance.
-*/
-
-const savedTheme =
-  localStorage.getItem("tttTheme");
-
-if (savedTheme === "dark") {
-  document.body.classList.add("dark");
-}
-
-
-/*
-  SCORE
-*/
 
 function updateScores() {
 
@@ -88,14 +70,40 @@ function updateScores() {
 updateScores();
 
 
-/*
-  START GAME
-*/
+/* ================================
+   THEME
+================================ */
+
+const savedTheme =
+  localStorage.getItem("tttTheme");
+
+if (savedTheme === "dark") {
+  document.body.classList.add("dark");
+}
+
+
+document
+  .getElementById("themeBtn")
+  .onclick = () => {
+
+    document.body.classList.toggle("dark");
+
+    localStorage.setItem(
+      "tttTheme",
+      document.body.classList.contains("dark")
+        ? "dark"
+        : "light"
+    );
+  };
+
+
+/* ================================
+   START GAME
+================================ */
 
 function startGame() {
 
-  board =
-    Array(25).fill("");
+  board = Array(25).fill("");
 
   gameOver = false;
   thinking = false;
@@ -118,9 +126,9 @@ function startGame() {
 }
 
 
-/*
-  NEW GAME
-*/
+/* ================================
+   NEW GAME
+================================ */
 
 document
   .getElementById("newGameBtn")
@@ -132,9 +140,9 @@ document
   };
 
 
-/*
-  PLAY AGAIN
-*/
+/* ================================
+   PLAY AGAIN
+================================ */
 
 document
   .getElementById("playAgainBtn")
@@ -146,9 +154,9 @@ document
   };
 
 
-/*
-  RESET SCORE
-*/
+/* ================================
+   RESET SCORE
+================================ */
 
 document
   .getElementById("resetScoreBtn")
@@ -164,28 +172,9 @@ document
   };
 
 
-/*
-  DARK / LIGHT MODE
-*/
-
-document
-  .getElementById("themeBtn")
-  .onclick = () => {
-
-    document.body.classList.toggle("dark");
-
-    localStorage.setItem(
-      "tttTheme",
-      document.body.classList.contains("dark")
-        ? "dark"
-        : "light"
-    );
-  };
-
-
-/*
-  PLAYER MOVE
-*/
+/* ================================
+   PLAYER MOVE
+================================ */
 
 cells.forEach(cell => {
 
@@ -202,10 +191,13 @@ cells.forEach(cell => {
       return;
     }
 
+
     placeMove(index, "X");
+
 
     const result =
       checkWinner(board);
+
 
     if (result) {
 
@@ -213,6 +205,7 @@ cells.forEach(cell => {
 
       return;
     }
+
 
     thinking = true;
 
@@ -222,27 +215,30 @@ cells.forEach(cell => {
     statusDot.classList.remove("live");
 
 
-    /*
-      Short delay makes the computer
-      feel natural rather than instant.
-    */
-
     setTimeout(() => {
 
       if (gameOver) return;
 
+
       const computerMove =
         getComputerMove();
 
-      placeMove(
-        computerMove,
-        "O"
-      );
+
+      if (computerMove !== null) {
+
+        placeMove(
+          computerMove,
+          "O"
+        );
+      }
+
 
       const computerResult =
         checkWinner(board);
 
+
       thinking = false;
+
 
       if (computerResult) {
 
@@ -263,9 +259,9 @@ cells.forEach(cell => {
 });
 
 
-/*
-  PLACE MOVE
-*/
+/* ================================
+   PLACE MOVE
+================================ */
 
 function placeMove(index, player) {
 
@@ -288,9 +284,9 @@ function placeMove(index, player) {
 }
 
 
-/*
-  CHECK ALL WINNING LINES
-*/
+/* ================================
+   CHECK WINNER
+================================ */
 
 function checkWinner(state) {
 
@@ -298,8 +294,9 @@ function checkWinner(state) {
 
     [0, 1],   // horizontal
     [1, 0],   // vertical
-    [1, 1],   // diagonal
-    [1, -1]   // diagonal
+    [1, 1],   // diagonal down-right
+    [1, -1]   // diagonal down-left
+
   ];
 
 
@@ -324,9 +321,13 @@ function checkWinner(state) {
       if (!player) continue;
 
 
-      for (const [dr, dc] of directions) {
+      for (
+        const [dr, dc]
+        of directions
+      ) {
 
         const line = [start];
+
 
         for (
           let step = 1;
@@ -340,23 +341,29 @@ function checkWinner(state) {
           const c =
             col + dc * step;
 
+
           if (
             r < 0 ||
             r >= BOARD_SIZE ||
             c < 0 ||
             c >= BOARD_SIZE
           ) {
+
             break;
           }
+
 
           const index =
             r * BOARD_SIZE + c;
 
+
           if (
             state[index] !== player
           ) {
+
             break;
           }
+
 
           line.push(index);
         }
@@ -368,8 +375,9 @@ function checkWinner(state) {
 
           return {
             winner: player,
-            line
+            line: line
           };
+
         }
 
       }
@@ -379,10 +387,6 @@ function checkWinner(state) {
   }
 
 
-  /*
-    Full board = draw.
-  */
-
   if (
     state.every(Boolean)
   ) {
@@ -391,6 +395,7 @@ function checkWinner(state) {
       winner: "draw",
       line: null
     };
+
   }
 
 
@@ -398,9 +403,9 @@ function checkWinner(state) {
 }
 
 
-/*
-  FINISH GAME
-*/
+/* ================================
+   FINISH GAME
+================================ */
 
 function finishGame(result) {
 
@@ -416,6 +421,7 @@ function finishGame(result) {
     drawWinLine(
       result.line
     );
+
   }
 
 
@@ -458,6 +464,7 @@ function finishGame(result) {
         "It's a Draw",
         "Neither side gave way."
       );
+
     }
 
 
@@ -467,9 +474,9 @@ function finishGame(result) {
 }
 
 
-/*
-  RESULT POPUP
-*/
+/* ================================
+   RESULT POPUP
+================================ */
 
 function showResult(
   icon,
@@ -495,68 +502,163 @@ function showResult(
 }
 
 
-/*
-  WINNING LINE
-*/
+/* ==================================================
+   FIXED WINNING LINE
+   ==================================================
+
+   IMPORTANT:
+
+   The old version calculated the line using
+   the first and last cells' screen positions.
+
+   On a CSS grid with padding and gaps, that can
+   cause the line to appear slightly offset.
+
+   This version calculates the exact center of
+   every winning cell relative to the board.
+
+   It then uses the first and LAST winning-cell
+   centers to draw the line.
+
+   This works for:
+
+       XXXX
+       |
+       |
+       XXXX
+
+   and both diagonals.
+================================================== */
 
 function drawWinLine(line) {
 
-  const first =
-    cells[line[0]]
-      .getBoundingClientRect();
+  if (
+    !line ||
+    line.length < 2
+  ) {
+    return;
+  }
 
-  const last =
-    cells[line[line.length - 1]]
-      .getBoundingClientRect();
+
+  /*
+    Get the board's exact position.
+  */
 
   const boardRect =
     boardEl.getBoundingClientRect();
 
 
-  const x1 =
-    first.left +
-    first.width / 2 -
+  /*
+    First winning square.
+  */
+
+  const firstCell =
+    cells[line[0]]
+      .getBoundingClientRect();
+
+
+  /*
+    Last winning square.
+  */
+
+  const lastCell =
+    cells[line[line.length - 1]]
+      .getBoundingClientRect();
+
+
+  /*
+    Calculate the CENTER of the first cell
+    relative to the board.
+  */
+
+  const startX =
+    firstCell.left +
+    firstCell.width / 2 -
     boardRect.left;
 
-  const y1 =
-    first.top +
-    first.height / 2 -
+
+  const startY =
+    firstCell.top +
+    firstCell.height / 2 -
     boardRect.top;
 
 
-  const x2 =
-    last.left +
-    last.width / 2 -
+  /*
+    Calculate the CENTER of the last cell
+    relative to the board.
+  */
+
+  const endX =
+    lastCell.left +
+    lastCell.width / 2 -
     boardRect.left;
 
-  const y2 =
-    last.top +
-    last.height / 2 -
+
+  const endY =
+    lastCell.top +
+    lastCell.height / 2 -
     boardRect.top;
+
+
+  /*
+    Calculate exact distance between centers.
+  */
+
+  const deltaX =
+    endX - startX;
+
+
+  const deltaY =
+    endY - startY;
 
 
   const length =
-    Math.hypot(
-      x2 - x1,
-      y2 - y1
+    Math.sqrt(
+      deltaX * deltaX +
+      deltaY * deltaY
     );
 
 
+  /*
+    Calculate exact angle.
+
+    Horizontal = 0°
+    Vertical = 90°
+    Diagonal = ±45°
+  */
+
   const angle =
     Math.atan2(
-      y2 - y1,
-      x2 - x1
+      deltaY,
+      deltaX
     ) * 180 / Math.PI;
 
 
+  /*
+    Position the line.
+
+    IMPORTANT:
+
+    The line's transform-origin is LEFT CENTER,
+    so its left/top coordinates begin exactly
+    at the center of the first winning square.
+  */
+
   winLine.style.left =
-    `${x1}px`;
+    `${startX}px`;
+
 
   winLine.style.top =
-    `${y1 - 2.5}px`;
+    `${startY - 2.5}px`;
+
 
   winLine.style.width =
     `${length}px`;
+
+
+  winLine.style.height =
+    "5px";
+
 
   winLine.style.setProperty(
     "--angle",
@@ -564,53 +666,48 @@ function drawWinLine(line) {
   );
 
 
+  /*
+    Match line color to winner.
+  */
+
   winLine.style.color =
     board[line[0]] === "X"
       ? "#007aff"
       : "#ff3b30";
 
 
+  /*
+    Make sure the line is visible.
+  */
+
   winLine.style.display =
     "block";
 
-  winLine.classList.add(
-    "show"
-  );
+
+  /*
+    Restart animation cleanly.
+
+    This is useful when the user starts
+    multiple games quickly.
+  */
+
+  winLine.classList.remove("show");
+
+  void winLine.offsetWidth;
+
+  winLine.classList.add("show");
 }
 
 
-/*
-  ======================================
-  COMPUTER AI
-  ======================================
-
-  The goal here is deliberately NOT
-  perfect play.
-
-  A perfect 5x5 AI would make the game
-  predictable and heavily favor draws.
-
-  Instead, the computer evaluates:
-  - immediate wins
-  - immediate blocks
-  - strong positions
-  - forks
-  - center
-  - open lines
-
-  It also introduces controlled natural
-  variation.
-
-  This gives the computer a strong,
-  human-like personality rather than
-  an obviously unbeatable algorithm.
-*/
-
+/* ==================================================
+   COMPUTER AI
+================================================== */
 
 function getComputerMove() {
 
   const available =
     getAvailableMoves();
+
 
   if (!available.length) {
     return null;
@@ -618,14 +715,12 @@ function getComputerMove() {
 
 
   /*
-    1. Always take an immediate win.
-
-    Missing a winning move feels
-    artificial, so this remains reliable.
+    Always take an immediate winning move.
   */
 
   const winningMove =
     findImmediateMove("O");
+
 
   if (
     winningMove !== null
@@ -636,15 +731,12 @@ function getComputerMove() {
 
 
   /*
-    2. Usually block the player.
-
-    Occasionally allowing a threat creates
-    realistic games and prevents perfect
-    defensive behavior.
+    Usually block the player.
   */
 
   const playerThreat =
     findImmediateMove("X");
+
 
   if (
     playerThreat !== null &&
@@ -656,14 +748,14 @@ function getComputerMove() {
 
 
   /*
-    Evaluate every available square.
+    Evaluate possible positions.
   */
 
   const scoredMoves =
     available.map(index => {
 
       return {
-        index,
+        index: index,
         score:
           evaluateMove(index)
       };
@@ -678,13 +770,7 @@ function getComputerMove() {
 
 
   /*
-    Natural choice distribution.
-
-    Most of the time the computer selects
-    one of the strongest moves.
-
-    Sometimes it chooses a slightly weaker
-    move, making wins possible.
+    Strong move most of the time.
   */
 
   const roll =
@@ -696,9 +782,12 @@ function getComputerMove() {
   ) {
 
     return scoredMoves[0].index;
-
   }
 
+
+  /*
+    Pick from the three strongest moves.
+  */
 
   if (
     roll < 0.86
@@ -713,13 +802,13 @@ function getComputerMove() {
         )
       );
 
-    return randomItem(top).index;
 
+    return randomItem(top).index;
   }
 
 
   /*
-    Natural imperfection.
+    Deliberately imperfect move.
   */
 
   const topHalf =
@@ -728,10 +817,11 @@ function getComputerMove() {
       Math.max(
         1,
         Math.ceil(
-          scoredMoves.length * .55
+          scoredMoves.length * 0.55
         )
       )
     );
+
 
   return randomItem(
     topHalf
@@ -739,9 +829,9 @@ function getComputerMove() {
 }
 
 
-/*
-  IMMEDIATE WIN / BLOCK
-*/
+/* ================================
+   IMMEDIATE MOVE
+================================ */
 
 function findImmediateMove(player) {
 
@@ -753,12 +843,16 @@ function findImmediateMove(player) {
 
     if (board[i]) continue;
 
+
     board[i] = player;
+
 
     const result =
       checkWinner(board);
 
+
     board[i] = "";
+
 
     if (
       result &&
@@ -767,15 +861,17 @@ function findImmediateMove(player) {
 
       return i;
     }
+
   }
+
 
   return null;
 }
 
 
-/*
-  EVALUATE MOVE
-*/
+/* ================================
+   EVALUATE MOVE
+================================ */
 
 function evaluateMove(index) {
 
@@ -783,6 +879,7 @@ function evaluateMove(index) {
     Math.floor(
       index / BOARD_SIZE
     );
+
 
   const col =
     index % BOARD_SIZE;
@@ -798,16 +895,18 @@ function evaluateMove(index) {
   const center =
     (BOARD_SIZE - 1) / 2;
 
+
   const distance =
     Math.abs(row - center) +
     Math.abs(col - center);
+
 
   score +=
     (BOARD_SIZE - distance) * 2;
 
 
   /*
-    Corners are useful but not dominant.
+    Corners.
   */
 
   const isCorner =
@@ -815,6 +914,7 @@ function evaluateMove(index) {
       (row === 0 || row === 4) &&
       (col === 0 || col === 4)
     );
+
 
   if (isCorner) {
     score += 3;
@@ -828,49 +928,35 @@ function evaluateMove(index) {
   board[index] = "O";
 
 
-  /*
-    Reward creating strong lines.
-  */
-
   score +=
-    countPotentialLines(
-      "O"
-    ) * 2;
+    countPotentialLines("O") * 2;
 
-
-  /*
-    If this creates multiple threats,
-    reward it significantly.
-  */
 
   const threats =
     countImmediateThreats("O");
+
 
   score +=
     threats * 7;
 
 
   /*
-    Simulate opponent response.
-
-    If this move prevents several
-    potential X lines, reward it.
+    Examine opponent potential.
   */
 
   board[index] = "X";
 
+
   score -=
-    countPotentialLines(
-      "X"
-    ) * 1.7;
+    countPotentialLines("X") * 1.7;
 
 
   board[index] = "";
 
 
   /*
-    Small random variation prevents
-    identical games.
+    Small variation makes the computer
+    less predictable.
   */
 
   score +=
@@ -881,19 +967,22 @@ function evaluateMove(index) {
 }
 
 
-/*
-  COUNT OPEN LINES
-*/
+/* ================================
+   POTENTIAL LINES
+================================ */
 
 function countPotentialLines(player) {
 
   let total = 0;
 
+
   const directions = [
+
     [0, 1],
     [1, 0],
     [1, 1],
     [1, -1]
+
   ];
 
 
@@ -917,6 +1006,7 @@ function countPotentialLines(player) {
         let playerCount = 0;
         let emptyCount = 0;
 
+
         for (
           let step = 0;
           step < WIN_LENGTH;
@@ -925,6 +1015,7 @@ function countPotentialLines(player) {
 
           const r =
             row + dr * step;
+
 
           const c =
             col + dc * step;
@@ -938,6 +1029,7 @@ function countPotentialLines(player) {
           ) {
 
             playerCount = -1;
+
             break;
           }
 
@@ -954,17 +1046,23 @@ function countPotentialLines(player) {
 
             playerCount++;
 
-          } else if (
+          }
+
+          else if (
             value === ""
           ) {
 
             emptyCount++;
 
-          } else {
+          }
+
+          else {
 
             playerCount = -1;
+
             break;
           }
+
         }
 
 
@@ -982,13 +1080,14 @@ function countPotentialLines(player) {
 
   }
 
+
   return total;
 }
 
 
-/*
-  COUNT IMMEDIATE THREATS
-*/
+/* ================================
+   IMMEDIATE THREATS
+================================ */
 
 function countImmediateThreats(player) {
 
@@ -1006,8 +1105,10 @@ function countImmediateThreats(player) {
 
     board[i] = player;
 
+
     const result =
       checkWinner(board);
+
 
     board[i] = "";
 
@@ -1027,13 +1128,14 @@ function countImmediateThreats(player) {
 }
 
 
-/*
-  AVAILABLE MOVES
-*/
+/* ================================
+   AVAILABLE MOVES
+================================ */
 
 function getAvailableMoves() {
 
   const moves = [];
+
 
   for (
     let i = 0;
@@ -1042,17 +1144,20 @@ function getAvailableMoves() {
   ) {
 
     if (!board[i]) {
+
       moves.push(i);
     }
+
   }
+
 
   return moves;
 }
 
 
-/*
-  RANDOM ITEM
-*/
+/* ================================
+   RANDOM ITEM
+================================ */
 
 function randomItem(array) {
 
@@ -1065,8 +1170,8 @@ function randomItem(array) {
 }
 
 
-/*
-  START FIRST GAME
-*/
+/* ================================
+   START
+================================ */
 
 startGame();

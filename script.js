@@ -1,108 +1,1072 @@
-const cells=[...document.querySelectorAll('.cell')];
-const boardEl=document.getElementById('board'), statusText=document.getElementById('statusText'), statusDot=document.getElementById('statusDot');
-const difficultyModal=document.getElementById('difficultyModal'), resultModal=document.getElementById('resultModal');
-const userScoreEl=document.getElementById('userScore'), cpuScoreEl=document.getElementById('cpuScore'), drawScoreEl=document.getElementById('drawScore');
-const winLine=document.getElementById('winLine');
-let board=Array(9).fill(''), difficulty=null, gameOver=true, thinking=false;
-let scores=JSON.parse(localStorage.getItem('tttScores')||'{"user":0,"cpu":0,"draw":0}');
-let theme=localStorage.getItem('tttTheme');
-if(theme==='dark') document.body.classList.add('dark');
+const BOARD_SIZE = 5;
+const WIN_LENGTH = 4;
 
-function updateScores(){userScoreEl.textContent=scores.user;cpuScoreEl.textContent=scores.cpu;drawScoreEl.textContent=scores.draw;localStorage.setItem('tttScores',JSON.stringify(scores))}
+const cells = [
+  ...document.querySelectorAll(".cell")
+];
+
+const boardEl =
+  document.getElementById("board");
+
+const statusText =
+  document.getElementById("statusText");
+
+const statusDot =
+  document.getElementById("statusDot");
+
+const winLine =
+  document.getElementById("winLine");
+
+const resultModal =
+  document.getElementById("resultModal");
+
+const userScoreEl =
+  document.getElementById("userScore");
+
+const cpuScoreEl =
+  document.getElementById("cpuScore");
+
+const drawScoreEl =
+  document.getElementById("drawScore");
+
+
+let board =
+  Array(25).fill("");
+
+let gameOver = false;
+
+let thinking = false;
+
+
+/*
+  Scores persist between games.
+*/
+
+let scores =
+  JSON.parse(
+    localStorage.getItem("ttt5Scores")
+  ) || {
+    user: 0,
+    cpu: 0,
+    draw: 0
+  };
+
+
+/*
+  Restore appearance.
+*/
+
+const savedTheme =
+  localStorage.getItem("tttTheme");
+
+if (savedTheme === "dark") {
+  document.body.classList.add("dark");
+}
+
+
+/*
+  SCORE
+*/
+
+function updateScores() {
+
+  userScoreEl.textContent =
+    scores.user;
+
+  cpuScoreEl.textContent =
+    scores.cpu;
+
+  drawScoreEl.textContent =
+    scores.draw;
+
+  localStorage.setItem(
+    "ttt5Scores",
+    JSON.stringify(scores)
+  );
+}
+
 updateScores();
 
-document.getElementById('newGameBtn').onclick=()=>openDifficulty();
-document.getElementById('playAgainBtn').onclick=()=>{resultModal.classList.add('hidden');startGame()};
-document.getElementById('cancelBtn').onclick=()=>difficultyModal.classList.add('hidden');
-document.getElementById('resetScoreBtn').onclick=()=>{scores={user:0,cpu:0,draw:0};updateScores()};
 
-document.getElementById('themeBtn').onclick=()=>{
- document.body.classList.toggle('dark');
- localStorage.setItem('tttTheme',document.body.classList.contains('dark')?'dark':'light');
-};
+/*
+  START GAME
+*/
 
-document.querySelectorAll('.difficulty').forEach(b=>b.onclick=()=>{
- difficulty=b.dataset.difficulty; difficultyModal.classList.add('hidden'); startGame();
+function startGame() {
+
+  board =
+    Array(25).fill("");
+
+  gameOver = false;
+  thinking = false;
+
+  winLine.classList.remove("show");
+  winLine.style.display = "none";
+
+  cells.forEach(cell => {
+
+    cell.textContent = "";
+
+    cell.className = "cell";
+
+  });
+
+  statusText.textContent =
+    "Your turn";
+
+  statusDot.classList.add("live");
+}
+
+
+/*
+  NEW GAME
+*/
+
+document
+  .getElementById("newGameBtn")
+  .onclick = () => {
+
+    resultModal.classList.add("hidden");
+
+    startGame();
+  };
+
+
+/*
+  PLAY AGAIN
+*/
+
+document
+  .getElementById("playAgainBtn")
+  .onclick = () => {
+
+    resultModal.classList.add("hidden");
+
+    startGame();
+  };
+
+
+/*
+  RESET SCORE
+*/
+
+document
+  .getElementById("resetScoreBtn")
+  .onclick = () => {
+
+    scores = {
+      user: 0,
+      cpu: 0,
+      draw: 0
+    };
+
+    updateScores();
+  };
+
+
+/*
+  DARK / LIGHT MODE
+*/
+
+document
+  .getElementById("themeBtn")
+  .onclick = () => {
+
+    document.body.classList.toggle("dark");
+
+    localStorage.setItem(
+      "tttTheme",
+      document.body.classList.contains("dark")
+        ? "dark"
+        : "light"
+    );
+  };
+
+
+/*
+  PLAYER MOVE
+*/
+
+cells.forEach(cell => {
+
+  cell.onclick = () => {
+
+    const index =
+      Number(cell.dataset.index);
+
+    if (
+      gameOver ||
+      thinking ||
+      board[index]
+    ) {
+      return;
+    }
+
+    placeMove(index, "X");
+
+    const result =
+      checkWinner(board);
+
+    if (result) {
+
+      finishGame(result);
+
+      return;
+    }
+
+    thinking = true;
+
+    statusText.textContent =
+      "Computer is thinking…";
+
+    statusDot.classList.remove("live");
+
+
+    /*
+      Short delay makes the computer
+      feel natural rather than instant.
+    */
+
+    setTimeout(() => {
+
+      if (gameOver) return;
+
+      const computerMove =
+        getComputerMove();
+
+      placeMove(
+        computerMove,
+        "O"
+      );
+
+      const computerResult =
+        checkWinner(board);
+
+      thinking = false;
+
+      if (computerResult) {
+
+        finishGame(computerResult);
+
+      } else {
+
+        statusText.textContent =
+          "Your turn";
+
+        statusDot.classList.add("live");
+      }
+
+    }, 280);
+
+  };
+
 });
 
-cells.forEach(c=>c.onclick=()=>{
- const i=+c.dataset.index;
- if(gameOver||thinking||board[i])return;
- place(i,'X');
- const result=check(board); if(result){finish(result);return}
- thinking=true; statusText.textContent='Computer is thinking…'; statusDot.classList.remove('live');
- setTimeout(()=>{const move=getComputerMove();place(move,'O');thinking=false;
-   const r=check(board); if(r) finish(r); else {statusText.textContent='Your turn';statusDot.classList.add('live')}
- },difficulty==='hard'?260:190);
-});
 
-function openDifficulty(){difficultyModal.classList.remove('hidden')}
+/*
+  PLACE MOVE
+*/
 
-function startGame(){
- board=Array(9).fill('');gameOver=false;thinking=false;winLine.classList.remove('show');winLine.style.display='none';
- cells.forEach(c=>{c.textContent='';c.className='cell';});
- statusText.textContent=`${capitalize(difficulty)} · Your turn`;statusDot.classList.add('live');
-}
-function capitalize(s){return s[0].toUpperCase()+s.slice(1)}
-function place(i,p){
- board[i]=p;cells[i].textContent=p==='X'?'×':'○';cells[i].classList.add(p==='X'?'x':'o','pop');
-}
-function check(b){
- const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
- for(const l of lines)if(b[l[0]]&&b[l[0]]===b[l[1]]&&b[l[1]]===b[l[2]])return {winner:b[l[0]],line:l};
- return b.every(Boolean)?{winner:'draw',line:null}:null;
-}
-function finish(r){
- gameOver=true;thinking=false;statusDot.classList.remove('live');
- if(r.line) drawWinLine(r.line);
- setTimeout(()=>{
-   if(r.winner==='X'){scores.user++;showResult('×','You Win!','Brilliant move.')}
-   else if(r.winner==='O'){scores.cpu++;showResult('○','Computer Wins','Good game. Try another round.')}
-   else {scores.draw++;showResult('=',"It's a Draw",'Perfectly matched.')}
-   updateScores();
- },r.line?420:220);
-}
-function showResult(icon,title,sub){
- document.getElementById('resultIcon').textContent=icon;
- document.getElementById('resultTitle').textContent=title;
- document.getElementById('resultSubtitle').textContent=sub;
- resultModal.classList.remove('hidden');
+function placeMove(index, player) {
+
+  board[index] = player;
+
+  const cell = cells[index];
+
+  cell.textContent =
+    player === "X"
+      ? "×"
+      : "○";
+
+  cell.classList.add(
+    player === "X"
+      ? "x"
+      : "o"
+  );
+
+  cell.classList.add("pop");
 }
 
-function drawWinLine(line){
- const a=cells[line[0]].getBoundingClientRect(), b=cells[line[2]].getBoundingClientRect(), br=boardEl.getBoundingClientRect();
- const x1=a.left+a.width/2-br.left,y1=a.top+a.height/2-br.top;
- const x2=b.left+b.width/2-br.left,y2=b.top+b.height/2-br.top;
- const len=Math.hypot(x2-x1,y2-y1),angle=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
- winLine.style.left=x1+'px';winLine.style.top=(y1-2.5)+'px';winLine.style.width=len+'px';winLine.style.setProperty('--angle',angle+'deg');
- winLine.style.color=board[line[0]]==='X'?'#007aff':'#ff3b30';winLine.style.display='block';winLine.classList.add('show');
+
+/*
+  CHECK ALL WINNING LINES
+*/
+
+function checkWinner(state) {
+
+  const directions = [
+
+    [0, 1],   // horizontal
+    [1, 0],   // vertical
+    [1, 1],   // diagonal
+    [1, -1]   // diagonal
+  ];
+
+
+  for (
+    let row = 0;
+    row < BOARD_SIZE;
+    row++
+  ) {
+
+    for (
+      let col = 0;
+      col < BOARD_SIZE;
+      col++
+    ) {
+
+      const start =
+        row * BOARD_SIZE + col;
+
+      const player =
+        state[start];
+
+      if (!player) continue;
+
+
+      for (const [dr, dc] of directions) {
+
+        const line = [start];
+
+        for (
+          let step = 1;
+          step < WIN_LENGTH;
+          step++
+        ) {
+
+          const r =
+            row + dr * step;
+
+          const c =
+            col + dc * step;
+
+          if (
+            r < 0 ||
+            r >= BOARD_SIZE ||
+            c < 0 ||
+            c >= BOARD_SIZE
+          ) {
+            break;
+          }
+
+          const index =
+            r * BOARD_SIZE + c;
+
+          if (
+            state[index] !== player
+          ) {
+            break;
+          }
+
+          line.push(index);
+        }
+
+
+        if (
+          line.length === WIN_LENGTH
+        ) {
+
+          return {
+            winner: player,
+            line
+          };
+        }
+
+      }
+
+    }
+
+  }
+
+
+  /*
+    Full board = draw.
+  */
+
+  if (
+    state.every(Boolean)
+  ) {
+
+    return {
+      winner: "draw",
+      line: null
+    };
+  }
+
+
+  return null;
 }
 
-function getComputerMove(){
- const available=board.map((v,i)=>v?null:i).filter(i=>i!==null);
- if(difficulty==='easy'){
-   if(Math.random()<.35){const win=findTactical('O');if(win!==null)return win}
-   return available[Math.floor(Math.random()*available.length)];
- }
- if(difficulty==='medium'){
-   if(Math.random()<.72){const tactical=findTactical('O');if(tactical!==null)return tactical}
-   if(Math.random()<.65){const block=findTactical('X');if(block!==null)return block}
-   if(board[4]===''&&Math.random()<.75)return 4;
-   const corners=[0,2,6,8].filter(i=>!board[i]);if(corners.length)return corners[Math.floor(Math.random()*corners.length)];
-   return available[Math.floor(Math.random()*available.length)];
- }
- return minimax(board,'O').index;
+
+/*
+  FINISH GAME
+*/
+
+function finishGame(result) {
+
+  gameOver = true;
+
+  thinking = false;
+
+  statusDot.classList.remove("live");
+
+
+  if (result.line) {
+
+    drawWinLine(
+      result.line
+    );
+  }
+
+
+  setTimeout(() => {
+
+    if (
+      result.winner === "X"
+    ) {
+
+      scores.user++;
+
+      showResult(
+        "×",
+        "You Win!",
+        "Great move."
+      );
+
+    }
+
+    else if (
+      result.winner === "O"
+    ) {
+
+      scores.cpu++;
+
+      showResult(
+        "○",
+        "Computer Wins",
+        "Good game. Try again."
+      );
+
+    }
+
+    else {
+
+      scores.draw++;
+
+      showResult(
+        "=",
+        "It's a Draw",
+        "Neither side gave way."
+      );
+    }
+
+
+    updateScores();
+
+  }, result.line ? 420 : 220);
 }
-function findTactical(p){
- for(let i=0;i<9;i++)if(!board[i]){board[i]=p;const r=check(board);board[i]='';if(r&&r.winner===p)return i}return null;
+
+
+/*
+  RESULT POPUP
+*/
+
+function showResult(
+  icon,
+  title,
+  subtitle
+) {
+
+  document.getElementById(
+    "resultIcon"
+  ).textContent = icon;
+
+  document.getElementById(
+    "resultTitle"
+  ).textContent = title;
+
+  document.getElementById(
+    "resultSubtitle"
+  ).textContent = subtitle;
+
+  resultModal.classList.remove(
+    "hidden"
+  );
 }
-function minimax(state,player){
- const r=check(state);if(r)return {score:r.winner==='O'?10:r.winner==='X'?-10:0};
- const moves=[];
- for(let i=0;i<9;i++)if(!state[i]){
-   state[i]=player;const result=minimax(state,player==='O'?'X':'O');state[i]='';
-   moves.push({index:i,score:result.score});
- }
- if(player==='O')return moves.reduce((a,b)=>b.score>a.score?b:a);
- return moves.reduce((a,b)=>b.score<a.score?b:a);
+
+
+/*
+  WINNING LINE
+*/
+
+function drawWinLine(line) {
+
+  const first =
+    cells[line[0]]
+      .getBoundingClientRect();
+
+  const last =
+    cells[line[line.length - 1]]
+      .getBoundingClientRect();
+
+  const boardRect =
+    boardEl.getBoundingClientRect();
+
+
+  const x1 =
+    first.left +
+    first.width / 2 -
+    boardRect.left;
+
+  const y1 =
+    first.top +
+    first.height / 2 -
+    boardRect.top;
+
+
+  const x2 =
+    last.left +
+    last.width / 2 -
+    boardRect.left;
+
+  const y2 =
+    last.top +
+    last.height / 2 -
+    boardRect.top;
+
+
+  const length =
+    Math.hypot(
+      x2 - x1,
+      y2 - y1
+    );
+
+
+  const angle =
+    Math.atan2(
+      y2 - y1,
+      x2 - x1
+    ) * 180 / Math.PI;
+
+
+  winLine.style.left =
+    `${x1}px`;
+
+  winLine.style.top =
+    `${y1 - 2.5}px`;
+
+  winLine.style.width =
+    `${length}px`;
+
+  winLine.style.setProperty(
+    "--angle",
+    `${angle}deg`
+  );
+
+
+  winLine.style.color =
+    board[line[0]] === "X"
+      ? "#007aff"
+      : "#ff3b30";
+
+
+  winLine.style.display =
+    "block";
+
+  winLine.classList.add(
+    "show"
+  );
 }
+
+
+/*
+  ======================================
+  COMPUTER AI
+  ======================================
+
+  The goal here is deliberately NOT
+  perfect play.
+
+  A perfect 5x5 AI would make the game
+  predictable and heavily favor draws.
+
+  Instead, the computer evaluates:
+  - immediate wins
+  - immediate blocks
+  - strong positions
+  - forks
+  - center
+  - open lines
+
+  It also introduces controlled natural
+  variation.
+
+  This gives the computer a strong,
+  human-like personality rather than
+  an obviously unbeatable algorithm.
+*/
+
+
+function getComputerMove() {
+
+  const available =
+    getAvailableMoves();
+
+  if (!available.length) {
+    return null;
+  }
+
+
+  /*
+    1. Always take an immediate win.
+
+    Missing a winning move feels
+    artificial, so this remains reliable.
+  */
+
+  const winningMove =
+    findImmediateMove("O");
+
+  if (
+    winningMove !== null
+  ) {
+
+    return winningMove;
+  }
+
+
+  /*
+    2. Usually block the player.
+
+    Occasionally allowing a threat creates
+    realistic games and prevents perfect
+    defensive behavior.
+  */
+
+  const playerThreat =
+    findImmediateMove("X");
+
+  if (
+    playerThreat !== null &&
+    Math.random() < 0.88
+  ) {
+
+    return playerThreat;
+  }
+
+
+  /*
+    Evaluate every available square.
+  */
+
+  const scoredMoves =
+    available.map(index => {
+
+      return {
+        index,
+        score:
+          evaluateMove(index)
+      };
+
+    });
+
+
+  scoredMoves.sort(
+    (a, b) =>
+      b.score - a.score
+  );
+
+
+  /*
+    Natural choice distribution.
+
+    Most of the time the computer selects
+    one of the strongest moves.
+
+    Sometimes it chooses a slightly weaker
+    move, making wins possible.
+  */
+
+  const roll =
+    Math.random();
+
+
+  if (
+    roll < 0.60
+  ) {
+
+    return scoredMoves[0].index;
+
+  }
+
+
+  if (
+    roll < 0.86
+  ) {
+
+    const top =
+      scoredMoves.slice(
+        0,
+        Math.min(
+          3,
+          scoredMoves.length
+        )
+      );
+
+    return randomItem(top).index;
+
+  }
+
+
+  /*
+    Natural imperfection.
+  */
+
+  const topHalf =
+    scoredMoves.slice(
+      0,
+      Math.max(
+        1,
+        Math.ceil(
+          scoredMoves.length * .55
+        )
+      )
+    );
+
+  return randomItem(
+    topHalf
+  ).index;
+}
+
+
+/*
+  IMMEDIATE WIN / BLOCK
+*/
+
+function findImmediateMove(player) {
+
+  for (
+    let i = 0;
+    i < board.length;
+    i++
+  ) {
+
+    if (board[i]) continue;
+
+    board[i] = player;
+
+    const result =
+      checkWinner(board);
+
+    board[i] = "";
+
+    if (
+      result &&
+      result.winner === player
+    ) {
+
+      return i;
+    }
+  }
+
+  return null;
+}
+
+
+/*
+  EVALUATE MOVE
+*/
+
+function evaluateMove(index) {
+
+  const row =
+    Math.floor(
+      index / BOARD_SIZE
+    );
+
+  const col =
+    index % BOARD_SIZE;
+
+
+  let score = 0;
+
+
+  /*
+    Center preference.
+  */
+
+  const center =
+    (BOARD_SIZE - 1) / 2;
+
+  const distance =
+    Math.abs(row - center) +
+    Math.abs(col - center);
+
+  score +=
+    (BOARD_SIZE - distance) * 2;
+
+
+  /*
+    Corners are useful but not dominant.
+  */
+
+  const isCorner =
+    (
+      (row === 0 || row === 4) &&
+      (col === 0 || col === 4)
+    );
+
+  if (isCorner) {
+    score += 3;
+  }
+
+
+  /*
+    Simulate computer move.
+  */
+
+  board[index] = "O";
+
+
+  /*
+    Reward creating strong lines.
+  */
+
+  score +=
+    countPotentialLines(
+      "O"
+    ) * 2;
+
+
+  /*
+    If this creates multiple threats,
+    reward it significantly.
+  */
+
+  const threats =
+    countImmediateThreats("O");
+
+  score +=
+    threats * 7;
+
+
+  /*
+    Simulate opponent response.
+
+    If this move prevents several
+    potential X lines, reward it.
+  */
+
+  board[index] = "X";
+
+  score -=
+    countPotentialLines(
+      "X"
+    ) * 1.7;
+
+
+  board[index] = "";
+
+
+  /*
+    Small random variation prevents
+    identical games.
+  */
+
+  score +=
+    Math.random() * 4;
+
+
+  return score;
+}
+
+
+/*
+  COUNT OPEN LINES
+*/
+
+function countPotentialLines(player) {
+
+  let total = 0;
+
+  const directions = [
+    [0, 1],
+    [1, 0],
+    [1, 1],
+    [1, -1]
+  ];
+
+
+  for (
+    let row = 0;
+    row < BOARD_SIZE;
+    row++
+  ) {
+
+    for (
+      let col = 0;
+      col < BOARD_SIZE;
+      col++
+    ) {
+
+      for (
+        const [dr, dc]
+        of directions
+      ) {
+
+        let playerCount = 0;
+        let emptyCount = 0;
+
+        for (
+          let step = 0;
+          step < WIN_LENGTH;
+          step++
+        ) {
+
+          const r =
+            row + dr * step;
+
+          const c =
+            col + dc * step;
+
+
+          if (
+            r < 0 ||
+            r >= BOARD_SIZE ||
+            c < 0 ||
+            c >= BOARD_SIZE
+          ) {
+
+            playerCount = -1;
+            break;
+          }
+
+
+          const value =
+            board[
+              r * BOARD_SIZE + c
+            ];
+
+
+          if (
+            value === player
+          ) {
+
+            playerCount++;
+
+          } else if (
+            value === ""
+          ) {
+
+            emptyCount++;
+
+          } else {
+
+            playerCount = -1;
+            break;
+          }
+        }
+
+
+        if (
+          playerCount > 0 &&
+          playerCount + emptyCount === WIN_LENGTH
+        ) {
+
+          total++;
+        }
+
+      }
+
+    }
+
+  }
+
+  return total;
+}
+
+
+/*
+  COUNT IMMEDIATE THREATS
+*/
+
+function countImmediateThreats(player) {
+
+  let threats = 0;
+
+
+  for (
+    let i = 0;
+    i < board.length;
+    i++
+  ) {
+
+    if (board[i]) continue;
+
+
+    board[i] = player;
+
+    const result =
+      checkWinner(board);
+
+    board[i] = "";
+
+
+    if (
+      result &&
+      result.winner === player
+    ) {
+
+      threats++;
+    }
+
+  }
+
+
+  return threats;
+}
+
+
+/*
+  AVAILABLE MOVES
+*/
+
+function getAvailableMoves() {
+
+  const moves = [];
+
+  for (
+    let i = 0;
+    i < board.length;
+    i++
+  ) {
+
+    if (!board[i]) {
+      moves.push(i);
+    }
+  }
+
+  return moves;
+}
+
+
+/*
+  RANDOM ITEM
+*/
+
+function randomItem(array) {
+
+  return array[
+    Math.floor(
+      Math.random() *
+      array.length
+    )
+  ];
+}
+
+
+/*
+  START FIRST GAME
+*/
+
+startGame();
